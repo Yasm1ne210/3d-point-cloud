@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# Checkpoints & logs (too heavy for git)
+checkpoints/*.pth
+logs/*.csv
+
+# Data (raw .ply files are too large)
+data/raw/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
