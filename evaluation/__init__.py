@@ -1,2 +1,1 @@
-from .pointnet2 import PointNetPlusPlus
-from .dgcnn import DGCNN
+from .evaluate import evaluate_model, collect_all_results, save_results_csv, generalization_gap

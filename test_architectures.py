@@ -1,16 +1,29 @@
 # test_architectures.py
 import torch
-from models.pointnet2 import PointNetPlusPlus
-from models.dgcnn import DGCNN
-from utils import count_parameters
+from models import PointNetPlusPlus, DGCNN
+from data.dummy_dataset import get_dummy_dataloaders
+from utils import count_parameters, set_seed
+from config import NUM_CLASSES, IN_CHANNELS, SEED
 
-def test(num_classes=10):
-    dummy = torch.randn(4, 1024, 3)  # replace 3 with 6 once RGB confirmed
-    for Model, name in [(PointNetPlusPlus, "PointNet++"), (DGCNN, "DGCNN")]:
-        model = Model(num_classes=num_classes)
-        out = model(dummy)
-        assert out.shape == (4, num_classes), f"{name} output shape mismatch"
-        print(f"\n{name} — output shape: {out.shape}")
-        count_parameters(model)
+set_seed(SEED)
+device = "cuda" if torch.cuda.is_available() else "cpu"
+print(f"Using device: {device}\n")
 
-test()
+train_loader, val_loader, _ = get_dummy_dataloaders()
+
+for Model, name in [(PointNetPlusPlus, "PointNet++"), (DGCNN, "DGCNN")]:
+    print(f"{'='*40}")
+    print(f"Testing {name}")
+    model = Model(num_classes=NUM_CLASSES, in_channels=IN_CHANNELS).to(device)
+
+    # Forward pass
+    points, labels = next(iter(train_loader))
+    points, labels = points.to(device), labels.to(device)
+    logits = model(points)
+    assert logits.shape == (points.shape[0], NUM_CLASSES), \
+        f"Expected ({points.shape[0]}, {NUM_CLASSES}), got {logits.shape}"
+    print(f"Output shape: {logits.shape} ✓")
+
+    # Parameter count
+    count_parameters(model)
+    print()
