@@ -1,5 +1,5 @@
 import torch
-from models import PointNetPlusPlus, DGCNN
+from models import PointNetPlusPlus, DGCNN, PointGNN, ThreeDGCN
 from data.dataset import get_dataloaders
 from federation.vfl import run_vfl
 from utils import set_seed
@@ -17,7 +17,12 @@ def save_log(log, path):
         writer.writerow(["epoch", "val_acc"])
         writer.writerows(log)
 
-for Model, name in [(PointNetPlusPlus, "pointnet2"), (DGCNN, "dgcnn")]:
+for Model, name in [
+    (PointNetPlusPlus, "pointnet2"),
+    (DGCNN, "dgcnn"),
+    (PointGNN, "pointgnn"),
+    (ThreeDGCN, "threedgcn"),
+]:
     print(f"\n{'='*40}")
     print(f"VFL — {name}")
     model_a = Model(num_classes=NUM_CLASSES, in_channels=3)

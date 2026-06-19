@@ -1,5 +1,5 @@
 import torch
-from models import PointNetPlusPlus, DGCNN
+from models import PointNetPlusPlus, DGCNN, PointGNN, ThreeDGCN
 from data.dataset import get_dataloaders
 from utils import count_parameters, set_seed
 from config import NUM_CLASSES, IN_CHANNELS, SEED
@@ -10,7 +10,12 @@ print(f"Using device: {device}\n")
 
 train_loader, val_loader, _ = get_dataloaders(data_dir="data/raw")
 
-for Model, name in [(PointNetPlusPlus, "PointNet++"), (DGCNN, "DGCNN")]:
+for Model, name in [
+    (PointNetPlusPlus, "PointNet++"),
+    (DGCNN, "DGCNN"),
+    (PointGNN, "PointGNN"),
+    (ThreeDGCN, "3D-GCN"),
+]:
     print(f"{'='*40}")
     print(f"Testing {name}")
     model = Model(num_classes=NUM_CLASSES, in_channels=IN_CHANNELS).to(device)

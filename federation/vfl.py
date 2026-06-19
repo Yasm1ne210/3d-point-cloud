@@ -3,6 +3,7 @@ import torch.nn as nn
 from config import VFL_EMBED_DIM, SEED
 from utils import set_seed
 
+
 class EntityModel(nn.Module):
     def __init__(self, base_model, embed_dim=VFL_EMBED_DIM):
         super().__init__()
@@ -15,6 +16,7 @@ class EntityModel(nn.Module):
     def _extract_features(self, x):
         model = self.base
         if hasattr(model, 'sa1'):
+            # PointNet++
             xyz = x[:, :, :3]
             features = x[:, :, 3:] if x.shape[2] > 3 else None
             xyz, features = model.sa1(xyz, features)
@@ -22,6 +24,7 @@ class EntityModel(nn.Module):
             xyz, features = model.sa3(xyz, features)
             return features.squeeze(1)
         elif hasattr(model, 'edge1'):
+            # DGCNN
             x = x.permute(0, 2, 1)
             x1 = model.edge1(x)
             x2 = model.edge2(x1)
@@ -30,8 +33,25 @@ class EntityModel(nn.Module):
             x_cat = torch.cat([x1, x2, x3, x4], dim=1)
             x_cat = model.conv(x_cat)
             return x_cat.max(dim=-1)[0]
+        elif hasattr(model, 'layers'):
+            # PointGNN
+            xyz = x[:, :, :3]
+            state = model.embed(x)
+            for layer in model.layers:
+                state = layer(xyz, state)
+            return state.max(dim=1)[0]
+        elif hasattr(model, 'layer1'):
+            # 3D-GCN
+            xyz = x[:, :, :3]
+            features = x
+            features = model.layer1(xyz, features)
+            features = model.layer2(xyz, features)
+            features = model.layer3(xyz, features)
+            features = model.layer4(xyz, features)
+            return features.max(dim=1)[0]
         else:
             raise ValueError("Unknown backbone architecture")
+
 
 class VFLServer(nn.Module):
     def __init__(self, embed_dim, num_classes):
@@ -46,6 +66,7 @@ class VFLServer(nn.Module):
     def forward(self, emb_a, emb_b):
         return self.fusion(torch.cat([emb_a, emb_b], dim=1))
 
+
 def _evaluate_vfl(entity_a, entity_b, server, loader, device):
     entity_a.eval(); entity_b.eval(); server.eval()
     correct, total = 0, 0
@@ -57,6 +78,7 @@ def _evaluate_vfl(entity_a, entity_b, server, loader, device):
             correct += (preds == labels).sum().item()
             total += labels.size(0)
     return correct / total
+
 
 def run_vfl(model_a, model_b, train_loader, val_loader,
             num_classes, epochs=50, lr=1e-3, device="cpu"):

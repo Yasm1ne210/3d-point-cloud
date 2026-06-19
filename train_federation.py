@@ -1,5 +1,5 @@
 import torch
-from models import PointNetPlusPlus, DGCNN
+from models import PointNetPlusPlus, DGCNN, PointGNN, ThreeDGCN
 from data.dataset import get_dataloaders
 from federation.hfl import run_hfl
 from utils import set_seed
@@ -17,7 +17,12 @@ def save_log(log, path):
         writer.writerow(["round", "val_acc"])
         writer.writerows(log)
 
-for Model, name in [(PointNetPlusPlus, "pointnet2"), (DGCNN, "dgcnn")]:
+for Model, name in [
+    (PointNetPlusPlus, "pointnet2"),
+    (DGCNN, "dgcnn"),
+    (PointGNN, "pointgnn"),
+    (ThreeDGCN, "threedgcn"),
+]:
     for iid, label in [(True, "iid"), (False, "noniid")]:
         print(f"\n{'='*40}")
         print(f"HFL {label.upper()} — {name}")
